@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0d1710" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PortoTrack" />
+  <title>PortoTrack</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #080e09; color: #dff0e8; font-family: 'DM Mono', 'Courier New', monospace; overscroll-behavior: none; }
+    body { padding-bottom: env(safe-area-inset-bottom); }
+    #app { min-height: 100vh; }
+
+    .card { background: #0f1a11; border: 1px solid #1c2e1f; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+    .s-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 800; color: #6EE7B7; letter-spacing: 1px; margin-bottom: 12px; }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #1a2b20; font-size: 13px; }
+    .row:last-child { border-bottom: none; }
+    .up { color: #34d399; }
+    .dn { color: #f87171; }
+    .amber { color: #fbbf24; }
+
+    input, select, textarea {
+      background: #0a1a10; border: 1px solid #1c2e1f; border-radius: 8px;
+      padding: 12px 14px; color: #dff0e8; font-family: 'DM Mono', monospace;
+      font-size: 16px; width: 100%; margin-top: 6px; outline: none;
+      appearance: none; -webkit-appearance: none;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #10b981; }
+    textarea { min-height: 70px; resize: vertical; }
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%234a7a5a'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px;
+    }
+    label { font-size: 10px; letter-spacing: 2px; color: #4a7a5a; text-transform: uppercase; margin-top: 14px; display: block; }
+
+    .btn { background: #10b981; color: #080e09; border: none; border-radius: 8px; padding: 14px 20px; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: 500; font-size: 14px; letter-spacing: 1px; width: 100%; margin-top: 12px; }
+    .btn:active { opacity: 0.8; }
+    .btn-ghost { background: none; border: 1px solid #1c2e1f; color: #6b9b80; border-radius: 8px; padding: 12px 20px; cursor: pointer; font-family: 'DM Mono', monospace; font-size: 12px; width: 100%; margin-top: 8px; }
+    .btn-sm { padding: 8px 12px; font-size: 11px; width: auto; margin-top: 0; }
+    .btn-danger { border-color: #f8717144; color: #f87171; }
+
+    .chip { padding: 6px 13px; border-radius: 20px; font-size: 11px; letter-spacing: 1px; cursor: pointer; border: 1px solid #1c2e1f; background: #0f1a11; color: #6b9b80; display: inline-block; margin: 3px; }
+    .chip.on { background: #10b981; color: #080e09; border-color: #10b981; }
+
+    /* Header */
+    .header { background: #0d1710; border-bottom: 1px solid #1c2e1f; padding: 14px 16px 12px; position: sticky; top: 0; z-index: 50; }
+    .header-inner { max-width: 600px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Bottom nav */
+    .botbar { position: fixed; bottom: 0; left: 0; right: 0; background: #0d1710; border-top: 1px solid #1c2e1f; display: flex; justify-content: center; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+    .botbar-inner { display: flex; width: 100%; max-width: 600px; }
+    .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 4px 8px; cursor: pointer; border: none; background: none; color: #4a6b5a; font-size: 9px; letter-spacing: 1px; font-family: 'DM Mono', monospace; gap: 3px; transition: color 0.2s; }
+    .tab-item.on { color: #10b981; }
+    .tab-icon { font-size: 17px; line-height: 1; }
+
+    /* FAB */
+    .fab { position: fixed; bottom: calc(72px + env(safe-area-inset-bottom)); right: 16px; background: #10b981; color: #080e09; border: none; border-radius: 50%; width: 54px; height: 54px; font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px #10b98155; z-index: 150; display: flex; align-items: center; justify-content: center; line-height: 1; }
+    .fab:active { transform: scale(0.95); }
+
+    /* Sheet modal */
+    .overlay { position: fixed; inset: 0; background: #000000dd; z-index: 200; display: flex; align-items: flex-end; justify-content: center; }
+    .sheet { background: #0f1a11; border-radius: 20px 20px 0 0; border-top: 1px solid #1c2e1f; padding: 20px 18px calc(40px + env(safe-area-inset-bottom)); width: 100%; max-width: 600px; max-height: 92vh; overflow-y: auto; }
+    .sheet-handle { width: 40px; height: 4px; background: #2a4035; border-radius: 2px; margin: 0 auto 18px; }
+
+    /* Content */
+    .inner { max-width: 600px; margin: 0 auto; padding: 12px 14px 0; padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+
+    /* Debt cards */
+    .debt-card { background: #0a1410; border: 1px solid #1c2e1f; border-radius: 10px; padding: 14px; margin-bottom: 8px; }
+    .tag-lunas { background: #10b98133; color: #34d399; font-size: 9px; padding: 2px 7px; border-radius: 10px; letter-spacing: 1px; }
+    .tag-belum { background: #f8717122; color: #f87171; font-size: 9px; padding: 2px 7px; border-radius: 10px; letter-spacing: 1px; }
+    .badge-pill { background: #10b98122; color: #34d399; border-radius: 20px; padding: 2px 8px; font-size: 10px; letter-spacing: 1px; }
+    .badge-pill.red { background: #f8717122; color: #f87171; }
+
+    /* Toast */
+    .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #10b981; color: #080e09; padding: 10px 20px; border-radius: 20px; font-size: 12px; font-weight: 500; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; }
+    .toast.show { opacity: 1; }
+
+    /* Install banner */
+    .install-banner { background: #0f1a11; border: 1px solid #10b98144; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.12.7/Recharts.min.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+// ── Constants ──────────────────────────────────────────────
+const COLORS = ["#6EE7B7","#34D399","#10B981","#059669","#a3e635"];
+const ASSET_LABELS = { reksadana:"Reksadana", etf:"ETF", btc:"BTC", emas:"Emas", goro:"GORO" };
+const TABS = [
+  { id:"dashboard", icon:"◈", label:"Porto" },
+  { id:"cashflow",  icon:"⇄", label:"Cashflow" },
+  { id:"hutang",    icon:"⚠", label:"Hutang" },
+  { id:"chart",     icon:"▦", label:"Grafik" },
+  { id:"catatan",   icon:"✎", label:"Catatan" },
+];
+const INITIAL_DATA = [{
+  date:"2026-04-23", label:"Apr 2026",
+  assets:{ reksadana:1775576, etf:1338421, btc:519622, emas:332216, goro:502531 },
+  cashflow:{ income:[], expense:[] },
+  utang:[], piutang:[],
+  note:"Update awal. Rate Fed hold di 3.5–3.75%. Inflasi masih sticky 3.3% YoY. Konflik Timur Tengah dorong harga energi naik.",
+}];
+
+// ── Helpers ────────────────────────────────────────────────
+const fmtRp = v => "Rp " + Number(v).toLocaleString("id-ID");
+const sumAssets = a => Object.values(a).reduce((s,v) => s + Number(v), 0);
+const sumArr = arr => arr.reduce((s,x) => s + x.amount, 0);
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+// ── Storage ────────────────────────────────────────────────
+function loadData() {
+  try {
+    const raw = localStorage.getItem("portotrack_v2");
+    return raw ? JSON.parse(raw) : INITIAL_DATA;
+  } catch { return INITIAL_DATA; }
+}
+function saveData(data) {
+  try { localStorage.setItem("portotrack_v2", JSON.stringify(data)); } catch {}
+}
+
+// ── Recharts aliases ───────────────────────────────────────
+const { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } = Recharts;
+
+// ── Main App ───────────────────────────────────────────────
+function App() {
+  const [history, _setHistory] = useState(loadData);
+  const [tab, setTab]         = useState("dashboard");
+  const [selMonth, setSelMonth] = useState(() => { const d = loadData(); return d.length - 1; });
+  const [modal, setModal]     = useState(null);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  const [newForm, setNewForm] = useState({ date:"", label:"", assets:{reksadana:"",etf:"",btc:"",emas:"",goro:""}, note:"" });
+  const [cfForm, setCfForm]   = useState({ type:"income", desc:"", amount:"" });
+  const [debtForm, setDebtForm] = useState({ type:"utang", desc:"", amount:"", due:"" });
+
+  function setHistory(val) {
+    const next = typeof val === "function" ? val(history) : val;
+    _setHistory(next);
+    saveData(next);
+  }
+
+  useEffect(() => {
+    const handler = e => { e.preventDefault(); setDeferredPrompt(e); };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  // Keep selMonth in bounds
+  useEffect(() => {
+    if (selMonth >= history.length) setSelMonth(history.length - 1);
+  }, [history]);
+
+  const latest = history[history.length - 1];
+  const prev   = history.length > 1 ? history[history.length - 2] : null;
+  const selM   = history[Math.min(selMonth, history.length - 1)];
+
+  const totalPorto   = sumAssets(latest.assets);
+  const totalUtang   = history.reduce((s,h) => s + sumArr(h.utang.filter(x=>!x.lunas)), 0);
+  const totalPiutang = history.reduce((s,h) => s + sumArr(h.piutang.filter(x=>!x.lunas)), 0);
+  const netWorth     = totalPorto - totalUtang + totalPiutang;
+
+  const pieData = Object.entries(latest.assets).map(([k,v]) => ({ name:ASSET_LABELS[k], value:Number(v) }));
+  const barData = history.map(h => ({ name:h.label, Total:sumAssets(h.assets) }));
+  const allUtang   = history.flatMap((h,i) => h.utang.map(x => ({...x,monthIdx:i,monthLabel:h.label})));
+  const allPiutang = history.flatMap((h,i) => h.piutang.map(x => ({...x,monthIdx:i,monthLabel:h.label})));
+
+  function addMonth(e) {
+    e.preventDefault();
+    if (!newForm.date || !newForm.label) return;
+    const entry = {
+      date:newForm.date, label:newForm.label, note:newForm.note,
+      assets:Object.fromEntries(Object.entries(newForm.assets).map(([k,v])=>[k,Number(v)||0])),
+      cashflow:{income:[],expense:[]}, utang:[], piutang:[],
+    };
+    setHistory(h => [...h, entry]);
+    setSelMonth(history.length); // point to new entry
+    setModal(null);
+    setNewForm({date:"",label:"",assets:{reksadana:"",etf:"",btc:"",emas:"",goro:""},note:""});
+    showToast("Data tersimpan ✓");
+  }
+
+  function addCF() {
+    if (!cfForm.desc || !cfForm.amount) return;
+    const item = { desc:cfForm.desc, amount:Number(cfForm.amount) };
+    setHistory(h => h.map((m,i) => i!==selMonth ? m : {
+      ...m, cashflow:{
+        income:  cfForm.type==="income"  ? [...m.cashflow.income,item]  : m.cashflow.income,
+        expense: cfForm.type==="expense" ? [...m.cashflow.expense,item] : m.cashflow.expense,
+      }
+    }));
+    setCfForm({type:"income",desc:"",amount:""});
+    setModal(null);
+    showToast("Transaksi ditambah ✓");
+  }
+
+  function addDebt() {
+    if (!debtForm.desc || !debtForm.amount) return;
+    const item = { desc:debtForm.desc, amount:Number(debtForm.amount), due:debtForm.due, lunas:false, id:Date.now() };
+    setHistory(h => h.map((m,i) => i!==selMonth ? m :
+      debtForm.type==="utang" ? {...m, utang:[...m.utang,item]} : {...m, piutang:[...m.piutang,item]}
+    ));
+    setDebtForm({type:"utang",desc:"",amount:"",due:""});
+    setModal(null);
+    showToast("Dicatat ✓");
+  }
+
+  function toggleLunas(monthIdx, type, id) {
+    setHistory(h => h.map((m,i) =>
+      i!==monthIdx ? m : {...m, [type]: m[type].map(x => x.id===id ? {...x,lunas:!x.lunas} : x)}
+    ));
+  }
+
+  function removeItem(monthIdx, type, id) {
+    setHistory(h => h.map((m,i) =>
+      i!==monthIdx ? m : {...m, [type]: m[type].filter(x => x.id!==id)}
+    ));
+    showToast("Dihapus");
+  }
+
+  async function installPWA() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") setDeferredPrompt(null);
+  }
+
+  const ttip = { contentStyle:{ background:"#0f1a11", border:"1px solid #1c2e1f", borderRadius:8, fontFamily:"DM Mono", fontSize:11 } };
+
+  return (
+    <div id="app-root">
+      {/* HEADER */}
+      <div className="header">
+        <div className="header-inner">
+          <div>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:20,fontWeight:800,color:"#6EE7B7",letterSpacing:2}}>
+              PORTO<span style={{color:"#10b981"}}>TRACK</span>
+            </div>
+            <div style={{fontSize:9,color:"#4a6b5a",letterSpacing:2}}>INVESTMENT · CASHFLOW · HUTANG</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:9,color:"#4a6b5a",letterSpacing:1}}>NET WORTH</div>
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:15,fontWeight:800,color:netWorth>=0?"#6EE7B7":"#f87171"}}>{fmtRp(netWorth)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="inner">
+
+        {/* Install Banner */}
+        {deferredPrompt && (
+          <div className="install-banner">
+            <div style={{fontSize:12,color:"#9dc9b0"}}>📲 Install PortoTrack ke Home Screen</div>
+            <button className="btn btn-sm" style={{width:"auto",marginTop:0}} onClick={installPWA}>Install</button>
+          </div>
+        )}
+
+        {/* DASHBOARD */}
+        {tab==="dashboard" && (
+          <div>
+            <div className="card" style={{background:"linear-gradient(135deg,#0f1a11,#0a1f14)",position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",top:-30,right:-30,width:110,height:110,background:"#10b98112",borderRadius:"50%"}} />
+              <div style={{fontSize:9,color:"#6b9b80",letterSpacing:2,textTransform:"uppercase"}}>Total Portofolio · {latest.label}</div>
+              <div style={{fontFamily:"Syne,sans-serif",fontSize:26,fontWeight:800,color:"#6EE7B7",margin:"6px 0 2px",lineHeight:1.1}}>{fmtRp(totalPorto)}</div>
+              {prev && (() => {
+                const diff = totalPorto - sumAssets(prev.assets);
+                const pct = ((diff/sumAssets(prev.assets))*100).toFixed(2);
+                return <div className={diff>=0?"up":"dn"} style={{fontSize:12}}>{diff>=0?"▲":"▼"} {fmtRp(Math.abs(diff))} ({pct}%) vs {prev.label}</div>;
+              })()}
+              <div style={{display:"flex",gap:16,marginTop:10}}>
+                <div style={{fontSize:11}}><span style={{color:"#f87171"}}>⚠ Utang </span><span style={{color:"#f87171"}}>{fmtRp(totalUtang)}</span></div>
+                <div style={{fontSize:11}}><span className="up">↩ Piutang </span><span className="up">{fmtRp(totalPiutang)}</span></div>
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="s-title">Aset</div>
+              {Object.entries(latest.assets).map(([k,v],i) => {
+                const pct = ((Number(v)/totalPorto)*100).toFixed(1);
+                const change = prev ? Number(v)-Number(prev.assets[k]) : null;
+                return (
+                  <div key={k} className="row">
+                    <div style={{display:"flex",alignItems:"center",gap:9}}>
+                      <div style={{width:9,height:9,borderRadius:2,background:COLORS[i],flexShrink:0}} />
+                      <span>{ASSET_LABELS[k]}</span>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontSize:13,fontWeight:500}}>{fmtRp(v)}</div>
+                      <div style={{fontSize:10,color:"#4a6b5a"}}>
+                        {pct}%
+                        {change!==null && <span className={change>=0?"up":"dn"} style={{marginLeft:6}}>{change>=0?"▲":"▼"}{fmtRp(Math.abs(change))}</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="card">
+              <div className="s-title">Distribusi</div>
+              <ResponsiveContainer width="100%" height={170}>
+                <PieChart>
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={42} outerRadius={72} paddingAngle={3} dataKey="value">
+                    {pieData.map((_,i) => <Cell key={i} fill={COLORS[i]} />)}
+                  </Pie>
+                  <Tooltip formatter={v=>fmtRp(v)} {...ttip} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center"}}>
+                {pieData.map((d,i) => (
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:5,fontSize:10,color:"#6b9b80"}}>
+                    <div style={{width:7,height:7,borderRadius:2,background:COLORS[i]}} />
+                    {d.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CASHFLOW */}
+        {tab==="cashflow" && (
+          <div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+              {history.map((h,i) => <div key={i} className={`chip${selMonth===i?" on":""}`} onClick={()=>setSelMonth(i)}>{h.label}</div>)}
+            </div>
+            {(() => {
+              const inc = sumArr(selM.cashflow.income);
+              const exp = sumArr(selM.cashflow.expense);
+              const net = inc - exp;
+              return (
+                <>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
+                    {[["Masuk",inc,"#34d399"],["Keluar",exp,"#f87171"],["Net",net,net>=0?"#6EE7B7":"#f87171"]].map(([l,v,c],i)=>(
+                      <div key={i} className="card" style={{padding:12,textAlign:"center",marginBottom:0}}>
+                        <div style={{fontSize:9,color:"#4a6b5a",letterSpacing:1}}>{l}</div>
+                        <div style={{fontSize:11,color:c,marginTop:4,fontWeight:500}}>{fmtRp(v)}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="card">
+                    <div className="s-title">💚 Pemasukan</div>
+                    {selM.cashflow.income.length===0
+                      ? <div style={{fontSize:12,color:"#4a6b5a"}}>Belum ada</div>
+                      : selM.cashflow.income.map((x,i) => <div key={i} className="row"><span>{x.desc}</span><span className="up">{fmtRp(x.amount)}</span></div>)}
+                  </div>
+                  <div className="card">
+                    <div className="s-title">🔴 Pengeluaran</div>
+                    {selM.cashflow.expense.length===0
+                      ? <div style={{fontSize:12,color:"#4a6b5a"}}>Belum ada</div>
+                      : selM.cashflow.expense.map((x,i) => <div key={i} className="row"><span>{x.desc}</span><span className="dn">{fmtRp(x.amount)}</span></div>)}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* HUTANG */}
+        {tab==="hutang" && (
+          <div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+              <div className="card" style={{padding:14,marginBottom:0}}>
+                <div style={{fontSize:9,color:"#4a6b5a",letterSpacing:1}}>UTANG AKTIF</div>
+                <div style={{fontFamily:"Syne,sans-serif",fontSize:17,fontWeight:800,color:"#f87171",marginTop:4}}>{fmtRp(totalUtang)}</div>
+              </div>
+              <div className="card" style={{padding:14,marginBottom:0}}>
+                <div style={{fontSize:9,color:"#4a6b5a",letterSpacing:1}}>PIUTANG AKTIF</div>
+                <div style={{fontFamily:"Syne,sans-serif",fontSize:17,fontWeight:800,color:"#34d399",marginTop:4}}>{fmtRp(totalPiutang)}</div>
+              </div>
+            </div>
+            <div className="card">
+              <div className="s-title">⚠ Utang / Paylater</div>
+              {allUtang.length===0
+                ? <div style={{fontSize:12,color:"#4a6b5a"}}>Tidak ada utang</div>
+                : allUtang.map((x,i) => (
+                  <div key={i} className="debt-card">
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                      <div style={{flex:1,marginRight:10}}>
+                        <div style={{fontSize:13,fontWeight:500}}>{x.desc}</div>
+                        <div style={{fontSize:10,color:"#4a6b5a",marginTop:2}}>{x.monthLabel}{x.due && ` · tempo ${x.due}`}</div>
+                      </div>
+                      <div style={{textAlign:"right",flexShrink:0}}>
+                        <div style={{fontSize:13,color:"#f87171"}}>{fmtRp(x.amount)}</div>
+                        <span className={x.lunas?"tag-lunas":"tag-belum"}>{x.lunas?"LUNAS":"BELUM"}</span>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",gap:8,marginTop:10}}>
+                      <button className="btn-ghost btn-sm" onClick={()=>toggleLunas(x.monthIdx,"utang",x.id)}>{x.lunas?"Buka":"✓ Lunas"}</button>
+                      <button className="btn-ghost btn-sm btn-danger" onClick={()=>removeItem(x.monthIdx,"utang",x.id)}>Hapus</button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+            <div className="card">
+              <div className="s-title">↩ Piutang</div>
+              {allPiutang.length===0
+                ? <div style={{fontSize:12,color:"#4a6b5a"}}>Tidak ada piutang</div>
+                : allPiutang.map((x,i) => (
+                  <div key={i} className="debt-card">
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                      <div style={{flex:1,marginRight:10}}>
+                        <div style={{fontSize:13,fontWeight:500}}>{x.desc}</div>
+                        <div style={{fontSize:10,color:"#4a6b5a",marginTop:2}}>{x.monthLabel}{x.due && ` · tempo ${x.due}`}</div>
+                      </div>
+                      <div style={{textAlign:"right",flexShrink:0}}>
+                        <div style={{fontSize:13,color:"#34d399"}}>{fmtRp(x.amount)}</div>
+                        <span className={x.lunas?"tag-lunas":"tag-belum"}>{x.lunas?"LUNAS":"BELUM"}</span>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",gap:8,marginTop:10}}>
+                      <button className="btn-ghost btn-sm" onClick={()=>toggleLunas(x.monthIdx,"piutang",x.id)}>{x.lunas?"Buka":"✓ Lunas"}</button>
+                      <button className="btn-ghost btn-sm btn-danger" onClick={()=>removeItem(x.monthIdx,"piutang",x.id)}>Hapus</button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {/* GRAFIK */}
+        {tab==="chart" && (
+          <div>
+            <div className="card">
+              <div className="s-title">Pertumbuhan Porto</div>
+              <ResponsiveContainer width="100%" height={190}>
+                <BarChart data={barData} margin={{left:-10}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1c2e1f" />
+                  <XAxis dataKey="name" tick={{fill:"#6b9b80",fontSize:10}} />
+                  <YAxis tick={{fill:"#6b9b80",fontSize:9}} tickFormatter={v=>(v/1000000).toFixed(1)+"M"} />
+                  <Tooltip formatter={v=>fmtRp(v)} {...ttip} />
+                  <Bar dataKey="Total" fill="#10b981" radius={[4,4,0,0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="card">
+              <div className="s-title">Komposisi Keuangan</div>
+              {[
+                {name:"Porto",val:totalPorto,color:"#10b981"},
+                {name:"Utang (aktif)",val:totalUtang,color:"#f87171"},
+                {name:"Piutang (aktif)",val:totalPiutang,color:"#34d399"},
+                {name:"Net Worth",val:netWorth,color:"#6EE7B7"},
+              ].map((d,i) => (
+                <div key={i} className="row">
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <div style={{width:8,height:8,borderRadius:2,background:d.color}} />
+                    <span style={{fontSize:13}}>{d.name}</span>
+                  </div>
+                  <span style={{color:d.color,fontSize:13}}>{fmtRp(d.val)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* CATATAN */}
+        {tab==="catatan" && (
+          <div>
+            {[...history].reverse().map((h,i) => (
+              <div key={i} className="card">
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+                  <div style={{fontFamily:"Syne,sans-serif",fontWeight:800,color:"#6EE7B7",fontSize:15}}>{h.label}</div>
+                  <div style={{fontSize:10,color:"#4a6b5a"}}>{h.date}</div>
+                </div>
+                <div style={{fontSize:12,color:"#9dc9b0",lineHeight:1.8}}>{h.note || <span style={{color:"#4a6b5a"}}>—</span>}</div>
+                <div style={{marginTop:10,display:"flex",gap:8,flexWrap:"wrap"}}>
+                  <span className="badge-pill">{fmtRp(sumAssets(h.assets))}</span>
+                  {sumArr(h.utang.filter(x=>!x.lunas))>0 && <span className="badge-pill red">Utang {fmtRp(sumArr(h.utang.filter(x=>!x.lunas)))}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* FAB */}
+      <button className="fab" onClick={()=>{
+        if(tab==="cashflow") setModal("addCF");
+        else if(tab==="hutang") setModal("addDebt");
+        else setModal("addMonth");
+      }}>+</button>
+
+      {/* BOTTOM NAV */}
+      <div className="botbar">
+        <div className="botbar-inner">
+          {TABS.map(t => (
+            <button key={t.id} className={`tab-item${tab===t.id?" on":""}`} onClick={()=>setTab(t.id)}>
+              <span className="tab-icon">{t.icon}</span>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* MODAL: ADD MONTH */}
+      {modal==="addMonth" && (
+        <div className="overlay" onClick={()=>setModal(null)}>
+          <div className="sheet" onClick={e=>e.stopPropagation()}>
+            <div className="sheet-handle" />
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:17,fontWeight:800,color:"#6EE7B7",marginBottom:16}}>Update Bulan Baru</div>
+            <label>Tanggal</label>
+            <input type="date" value={newForm.date} onChange={e=>setNewForm({...newForm,date:e.target.value})} />
+            <label>Label (e.g. Mei 2026)</label>
+            <input placeholder="Mei 2026" value={newForm.label} onChange={e=>setNewForm({...newForm,label:e.target.value})} />
+            {Object.keys(ASSET_LABELS).map(k=>(
+              <div key={k}>
+                <label>{ASSET_LABELS[k]} (Rp)</label>
+                <input type="number" inputMode="numeric" placeholder="0" value={newForm.assets[k]} onChange={e=>setNewForm({...newForm,assets:{...newForm.assets,[k]:e.target.value}})} />
+              </div>
+            ))}
+            <label>Catatan</label>
+            <textarea placeholder="Kondisi pasar, Fed, dll..." value={newForm.note} onChange={e=>setNewForm({...newForm,note:e.target.value})} />
+            <button className="btn" onClick={addMonth}>Simpan</button>
+            <button className="btn-ghost" onClick={()=>setModal(null)}>Batal</button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ADD CASHFLOW */}
+      {modal==="addCF" && (
+        <div className="overlay" onClick={()=>setModal(null)}>
+          <div className="sheet" onClick={e=>e.stopPropagation()}>
+            <div className="sheet-handle" />
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:17,fontWeight:800,color:"#6EE7B7",marginBottom:4}}>Tambah Cashflow</div>
+            <div style={{fontSize:11,color:"#4a6b5a",marginBottom:14}}>{selM.label}</div>
+            <label>Tipe</label>
+            <select value={cfForm.type} onChange={e=>setCfForm({...cfForm,type:e.target.value})}>
+              <option value="income">💚 Pemasukan</option>
+              <option value="expense">🔴 Pengeluaran</option>
+            </select>
+            <label>Keterangan</label>
+            <input placeholder="Gaji, transfer, makan, dll..." value={cfForm.desc} onChange={e=>setCfForm({...cfForm,desc:e.target.value})} />
+            <label>Jumlah (Rp)</label>
+            <input type="number" inputMode="numeric" placeholder="0" value={cfForm.amount} onChange={e=>setCfForm({...cfForm,amount:e.target.value})} />
+            <button className="btn" onClick={addCF}>Tambah</button>
+            <button className="btn-ghost" onClick={()=>setModal(null)}>Batal</button>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ADD DEBT */}
+      {modal==="addDebt" && (
+        <div className="overlay" onClick={()=>setModal(null)}>
+          <div className="sheet" onClick={e=>e.stopPropagation()}>
+            <div className="sheet-handle" />
+            <div style={{fontFamily:"Syne,sans-serif",fontSize:17,fontWeight:800,color:"#6EE7B7",marginBottom:14}}>Tambah Utang / Piutang</div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:6}}>
+              {history.map((h,i)=><div key={i} className={`chip${selMonth===i?" on":""}`} onClick={()=>setSelMonth(i)}>{h.label}</div>)}
+            </div>
+            <label>Tipe</label>
+            <select value={debtForm.type} onChange={e=>setDebtForm({...debtForm,type:e.target.value})}>
+              <option value="utang">⚠ Utang / Paylater</option>
+              <option value="piutang">↩ Piutang (orang lain hutang ke saya)</option>
+            </select>
+            <label>Keterangan</label>
+            <input placeholder="Shopee Paylater, GoPay Later, dll..." value={debtForm.desc} onChange={e=>setDebtForm({...debtForm,desc:e.target.value})} />
+            <label>Jumlah (Rp)</label>
+            <input type="number" inputMode="numeric" placeholder="0" value={debtForm.amount} onChange={e=>setDebtForm({...debtForm,amount:e.target.value})} />
+            <label>Jatuh Tempo (opsional)</label>
+            <input type="date" value={debtForm.due} onChange={e=>setDebtForm({...debtForm,due:e.target.value})} />
+            <button className="btn" onClick={addDebt}>Simpan</button>
+            <button className="btn-ghost" onClick={()=>setModal(null)}>Batal</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("app")).render(<App />);
+</script>
+
+<script>
+// Register Service Worker
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
